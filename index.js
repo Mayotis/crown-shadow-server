@@ -11,7 +11,7 @@ const port = process.env.PORT || 2567;
 
 const server = http.createServer(app);
 const gameServer = new colyseus.Server({
-  server,
+  server, // Colyseus attaches WebSocket + REST automatically
 });
 
 app.use(cors());
@@ -20,9 +20,7 @@ app.use(express.json());
 // ✅ Register your GameRoom
 gameServer.define("game", GameRoom);
 
-// ✅ Expose Colyseus room listing at /colyseus
-app.use("/colyseus", gameServer);
-
+// ✅ Start Colyseus
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${port}`);
 
