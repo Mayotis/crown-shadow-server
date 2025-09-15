@@ -32,26 +32,8 @@ class GameRoom extends colyseus.Room {
     this.setState(new State());
 
     this.onMessage("updateState", (client, data) => {
-      const player = this.state.players[client.sessionId];
+      const player = this.state.players.get(client.sessionId);
       if (player) {
         player.x = data.x;
         player.y = data.y;
-        player.action = data.action;
-      }
-      this.broadcast("playerUpdate", { id: client.sessionId, ...data }, { except: client });
-    });
-  }
-
-  onJoin(client, options) {
-    const player = new Player();
-    this.state.players[client.sessionId] = player;
-    console.log(`Player ${client.sessionId} joined.`);
-  }
-
-  onLeave(client, consented) {
-    delete this.state.players[client.sessionId];
-    console.log(`Player ${client.sessionId} left.`);
-  }
-}
-
-module.exports = { GameRoom };
+        player.action = d
