@@ -9,22 +9,24 @@ const { GameRoom } = require("./GameRoom");
 const app = express();
 const port = process.env.PORT || 2567;
 
-app.use(cors({ origin: "*" })); // 👈 Allow all origins
+// ✅ Enable CORS for *all* requests
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 const server = http.createServer(app);
+
 const gameServer = new colyseus.Server({
   server,
 });
 
-// Register GameRoom
+// Register your GameRoom
 gameServer.define("game", GameRoom);
 
 // Health check
 app.get("/health", (req, res) => {
-  res.send("Server is running");
+  res.send("Server is running ✅");
 });
 
-// Start
+// Start listening
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${port}`);
