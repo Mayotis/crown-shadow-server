@@ -10,8 +10,11 @@ const app = express();
 const port = process.env.PORT || 2567;
 
 const server = http.createServer(app);
+
+// ✅ Add the /colyseus path here
 const gameServer = new colyseus.Server({
-  server, // Colyseus attaches to HTTP server directly in v0.15
+  server,
+  path: "/colyseus",
 });
 
 app.use(cors());
@@ -23,7 +26,7 @@ gameServer.define("game", GameRoom);
 // Start the server
 gameServer.listen(port);
 
-console.log(`Listening on ws://localhost:${port}`);
+console.log(`Listening on ws://localhost:${port}/colyseus`);
 
 // Health check for Render
 app.get("/health", (req, res) => {
