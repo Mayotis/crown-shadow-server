@@ -1,55 +1,44 @@
-const colyseus = require('colyseus');
-const schema = require('@colyseus/schema');
-const Schema = schema.Schema;
-const MapSchema = schema.MapSchema;
-const type = schema.type;
+const colyseus = require("colyseus");
+const schema = require("@colyseus/schema");
+const { Schema, type, MapSchema } = schema;
 
+// Player schema
 class Player extends Schema {
-  constructor() {
-    super();
-    this.x = 0;
-    this.y = 0;
-    this.action = "";
-  }
+  @type("number") x = 0;
+  @type("number") y = 0;
+  @type("string") action = "";
 }
 
-type("number")(Player.prototype, "x");
-type("number")(Player.prototype, "y");
-type("string")(Player.prototype, "action");
-
+// State schema
 class State extends Schema {
-  constructor() {
-    super();
-    this.players = new MapSchema();
-  }
+  @type({ map: Player }) players = new MapSchema();
 }
 
-type({ map: Player })(State.prototype, "players");
-
+// Game room
 class GameRoom extends colyseus.Room {
   onCreate(options) {
     this.setState(new State());
 
     this.onMessage("updateState", (client, data) => {
-      const player = this.state.players[client.sessionId];
+      const player = this.state.players.get(client.sessionId);
       if (player) {
         player.x = data.x;
         player.y = data.y;
         player.action = data.action;
       }
-      // Broadcast to others
+      // Broadcast update to other clients
       this.broadcast("playerUpdate", { id: client.sessionId, ...data }, { except: client });
     });
   }
 
   onJoin(client, options) {
     const player = new Player();
-    this.state.players[client.sessionId] = player;
+    this.state.players.set(client.sessionId, player);
     console.log(`Player ${client.sessionId} joined.`);
   }
 
   onLeave(client, consented) {
-    delete this.state.players[client.sessionId];
+    this.state.players.delete(client.sessionId);
     console.log(`Player ${client.sessionId} left.`);
   }
 }
