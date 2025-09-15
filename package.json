@@ -6,11 +6,16 @@
   "scripts": {
     "start": "node index.js"
   },
-  "dependencies": {
-    "colyseus": "0.15.10",
-    "@colyseus/schema": "1.0.40",
-    "express": "4.18.2",
-    "cors": "2.8.5",
-    "dotenv": "16.4.5"
+"dependencies": {
+  "colyseus": "^0.16.4",
+  "@colyseus/core": "^0.16.4",
+  "@colyseus/schema": "^3.0.60",
+  "@colyseus/ws-transport": "^0.16.4",
+  "@colyseus/redis-presence": "^0.16.4",
+  "@colyseus/redis-driver": "^0.16.4",
+  "express": "^4.18.2",
+  "cors": "^2.8.5",
+  "dotenv": "^16.4.5"
+}
   }
 }
