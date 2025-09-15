@@ -1,8 +1,7 @@
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
-const { Server, LocalPresence } = require("colyseus");
-const { WebSocketTransport } = require("@colyseus/ws-transport");
+const colyseus = require("colyseus");
 require("dotenv").config();
 
 const { GameRoom } = require("./GameRoom");
@@ -11,9 +10,8 @@ const app = express();
 const port = process.env.PORT || 2567;
 
 const server = http.createServer(app);
-const gameServer = new Server({
-  transport: new WebSocketTransport({ server }),
-  presence: new LocalPresence() // ✅ prevents Redis errors
+const gameServer = new colyseus.Server({
+  server, // Colyseus attaches to HTTP server directly in v0.15
 });
 
 app.use(cors());
@@ -27,7 +25,7 @@ gameServer.listen(port);
 
 console.log(`Listening on ws://localhost:${port}`);
 
-// Optional: health check endpoint
+// Health check for Render
 app.get("/health", (req, res) => {
   res.send("Server is running");
 });
