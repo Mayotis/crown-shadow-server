@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node server.js"
   },
-"dependencies": {
+  "dependencies": {
     "colyseus": "^0.16.5",
-    "@colyseus/schema": "^3.0.0",        // or whichever schema version matches colyseus 0.16.x
+    "@colyseus/schema": "^3.0.0",
     "@colyseus/ws-transport": "^0.16.5",
     "express": "^4.18.2",
     "cors": "^2.8.5",
