@@ -1,7 +1,7 @@
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
-const { Server } = require("colyseus");
+const { Server, LocalPresence } = require("colyseus");
 const { WebSocketTransport } = require("@colyseus/ws-transport");
 require("dotenv").config();
 
@@ -12,7 +12,8 @@ const port = process.env.PORT || 2567;
 
 const server = http.createServer(app);
 const gameServer = new Server({
-  transport: new WebSocketTransport({ server })
+  transport: new WebSocketTransport({ server }),
+  presence: new LocalPresence() // ✅ prevents Redis errors
 });
 
 app.use(cors());
