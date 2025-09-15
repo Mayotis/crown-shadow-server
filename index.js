@@ -18,15 +18,19 @@ const gameServer = new colyseus.Server({
 app.use(cors());
 app.use(express.json());
 
-// ✅ Serve static files from /public (includes colyseus.js)
-app.use(express.static(path.join(__dirname, "public")));
+// ✅ Serve colyseus.js directly from project root
+app.get("/colyseus.js", (req, res) => {
+  res.sendFile(path.join(__dirname, "colyseus.js"));
+});
 
+// Register your GameRoom
 gameServer.define("game", GameRoom);
 
+// Start Colyseus server
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${port}`);
 
-// Health check
+// Health check endpoint
 app.get("/health", (req, res) => {
-  res.send("Server is running ✅");
+  res.send("Server is running");
 });
