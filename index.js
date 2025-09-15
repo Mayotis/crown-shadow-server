@@ -26,7 +26,7 @@ gameServer.listen(port);
 
 console.log(`Listening on ws://localhost:${port}`);
 
-// Optional: health check
+// Optional: health check endpoint
 app.get("/health", (req, res) => {
   res.send("Server is running");
 });
