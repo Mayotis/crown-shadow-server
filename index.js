@@ -9,26 +9,22 @@ const { GameRoom } = require("./GameRoom");
 const app = express();
 const port = process.env.PORT || 2567;
 
-const server = http.createServer(app);
-
-// ✅ Add the /colyseus path here
-const gameServer = new colyseus.Server({
-  server,
-  path: "/colyseus",
-});
-
-app.use(cors());
+app.use(cors({ origin: "*" })); // 👈 Allow all origins
 app.use(express.json());
 
-// Register your GameRoom
+const server = http.createServer(app);
+const gameServer = new colyseus.Server({
+  server,
+});
+
+// Register GameRoom
 gameServer.define("game", GameRoom);
 
-// Start the server
-gameServer.listen(port);
-
-console.log(`Listening on ws://localhost:${port}/colyseus`);
-
-// Health check for Render
+// Health check
 app.get("/health", (req, res) => {
   res.send("Server is running");
 });
+
+// Start
+gameServer.listen(port);
+console.log(`Listening on ws://localhost:${port}`);
