@@ -20,7 +20,7 @@ const gameServer = new colyseus.Server({
 // Register your custom GameRoom
 gameServer.define("game", GameRoom);
 
-// ✅ Register LobbyRoom so /colyseus/rooms works
+// ✅ Register the built-in LobbyRoom so `/colyseus/rooms` works
 const { LobbyRoom } = require("colyseus");
 gameServer.define("lobby", LobbyRoom);
 
