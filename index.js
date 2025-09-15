@@ -10,16 +10,17 @@ const { GameRoom } = require("./GameRoom");
 const app = express();
 const port = process.env.PORT || 2567;
 
+// ✅ Enable CORS for all origins
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+
+// ✅ Serve self-hosted colyseus.js UMD build
+app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
+
 const server = http.createServer(app);
 const gameServer = new colyseus.Server({
   server,
 });
-
-app.use(cors());
-app.use(express.json());
-
-// ✅ Serve colyseus.js for clients
-app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
 
 // ✅ Register rooms
 gameServer.define("game", GameRoom);
@@ -28,9 +29,22 @@ gameServer.define("game", GameRoom);
 const { LobbyRoom } = require("colyseus");
 gameServer.define("lobby", LobbyRoom);
 
-gameServer.listen(port);
-console.log(`Listening on ws://localhost:${port}`);
+// ✅ Add the /colyseus/rooms endpoint manually
+app.get("/colyseus/rooms", async (req, res) => {
+  try {
+    const rooms = await gameServer.matchMaker.query({});
+    res.json(rooms);
+  } catch (err) {
+    console.error("Error fetching rooms:", err);
+    res.status(500).json({ error: "Failed to fetch rooms" });
+  }
+});
 
+// ✅ Health check
 app.get("/health", (req, res) => {
   res.send("Server is running");
 });
+
+// ✅ Start server
+gameServer.listen(port);
+console.log(`Listening on ws://localhost:${port}`);
