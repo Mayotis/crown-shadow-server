@@ -6,10 +6,8 @@ const path = require("path");
 require("dotenv").config();
 
 const { GameRoom } = require("./GameRoom");
-
-// 🚀 Correct import for LobbyRoom on v0.16
-const { LobbyRoom } = require("@colyseus/core");
-const { monitor } = require("@colyseus/monitor");
+const { LobbyRoom } = require("@colyseus/core"); // ✅ correct import
+const { monitor } = require("@colyseus/monitor"); // ✅ for room listing
 
 const app = express();
 const port = process.env.PORT || 2567;
@@ -27,17 +25,15 @@ app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
 
 // ✅ Register rooms
 gameServer.define("game", GameRoom);
-
-// ✅ Register LobbyRoom properly
 gameServer.define("lobby", LobbyRoom);
 
-// ✅ Add REST monitor for availableRooms, etc.
+// ✅ Monitor & expose room list API
 app.use("/colyseus", monitor());
 
-gameServer.listen(port);
-console.log(`Listening on ws://localhost:${port}`);
-
-// Health check
+// ✅ Health check
 app.get("/health", (req, res) => {
   res.send("Server is running");
 });
+
+gameServer.listen(port);
+console.log(`Listening on ws://localhost:${port}`);
