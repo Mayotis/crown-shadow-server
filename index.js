@@ -1,3 +1,4 @@
+// index.js
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
@@ -10,30 +11,25 @@ const { LobbyRoom } = require("@colyseus/core");
 
 const app = express();
 const port = process.env.PORT || 2567;
-
 const server = http.createServer(app);
 
-const gameServer = new colyseus.Server({
-  server,
-});
+const gameServer = new colyseus.Server({ server });
 
-// ✅ Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ✅ Serve self-hosted Colyseus client
+// Serve self-hosted UMD client (ensure colyseus.js exists at project root)
 app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
 
-// ✅ Register rooms
+// Define rooms
 gameServer.define("game", GameRoom);
 gameServer.define("lobby", LobbyRoom);
 
-// ✅ Start server
+// Start server
 gameServer.listen(port).then(() => {
   console.log(`✅ Colyseus listening on ws://localhost:${port}`);
 });
 
-// ✅ Health check
-app.get("/health", (req, res) => {
-  res.send("Server is running");
-});
+// Simple health check
+app.get("/health", (req, res) => res.send("Server is running"));
