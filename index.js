@@ -6,8 +6,6 @@ const path = require("path");
 require("dotenv").config();
 
 const { GameRoom } = require("./GameRoom");
-
-// ✅ In Colyseus v0.16, LobbyRoom is inside @colyseus/core
 const { LobbyRoom } = require("@colyseus/core");
 
 const app = express();
@@ -19,19 +17,18 @@ const gameServer = new colyseus.Server({
   server,
 });
 
-// ✅ Express middleware
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
 
-// ✅ Serve self-hosted colyseus.js client
+// ✅ Serve self-hosted Colyseus client
 app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
 
-// ✅ Define game room
+// ✅ Register rooms
 gameServer.define("game", GameRoom);
-
-// ✅ Define lobby room
 gameServer.define("lobby", LobbyRoom);
 
+// ✅ Start server
 gameServer.listen(port).then(() => {
   console.log(`✅ Colyseus listening on ws://localhost:${port}`);
 });
