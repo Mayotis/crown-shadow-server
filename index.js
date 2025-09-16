@@ -11,6 +11,7 @@ const { LobbyRoom } = require("@colyseus/core");
 
 const app = express();
 const port = process.env.PORT || 2567;
+
 const server = http.createServer(app);
 
 const gameServer = new colyseus.Server({ server });
@@ -19,17 +20,15 @@ const gameServer = new colyseus.Server({ server });
 app.use(cors());
 app.use(express.json());
 
-// Serve self-hosted UMD client (ensure colyseus.js exists at project root)
+// Serve client sdk
 app.use("/colyseus.js", express.static(path.join(__dirname, "colyseus.js")));
 
-// Define rooms
+// Rooms
 gameServer.define("game", GameRoom);
 gameServer.define("lobby", LobbyRoom);
 
-// Start server
 gameServer.listen(port).then(() => {
   console.log(`✅ Colyseus listening on ws://localhost:${port}`);
 });
 
-// Simple health check
 app.get("/health", (req, res) => res.send("Server is running"));
