@@ -1,187 +1,130 @@
-// server/GameRoom.js
+// GameRoom.js
 const colyseus = require("colyseus");
 const schema = require("@colyseus/schema");
-const { Schema, type, MapSchema } = schema;
+const Schema = schema.Schema;
+const MapSchema = schema.MapSchema;
+const type = schema.type;
 
-/**
- * --- Player Schema ---
- * Mirrors client gameRef.current.players
- */
-class PlayerState extends Schema {
+// --- Player schema ---
+class Player extends Schema {
   constructor() {
     super();
     this.id = "";
-    this.type = "warrior"; // e.g., 'warrior' | 'princess'
     this.x = 0;
     this.y = 0;
     this.vx = 0;
     this.vy = 0;
-    this.width = 32;
-    this.height = 32;
     this.grounded = false;
-    this.holding = null; // objectId or sessionId
+    this.holding = null;
     this.heldBy = null;
-    this.riding = null; // objectId
+    this.riding = null;
     this.direction = "right";
     this.animationFrame = 0;
     this.animationTimer = 0;
-    this.player_id = ""; // e.g., "player1" or "player2" from levels
+    this.width = 32;
+    this.height = 32;
+    this.type = "warrior";
+    this.player_id = "";
   }
 }
-type("string")(PlayerState.prototype, "id");
-type("string")(PlayerState.prototype, "type");
-type("number")(PlayerState.prototype, "x");
-type("number")(PlayerState.prototype, "y");
-type("number")(PlayerState.prototype, "vx");
-type("number")(PlayerState.prototype, "vy");
-type("number")(PlayerState.prototype, "width");
-type("number")(PlayerState.prototype, "height");
-type("boolean")(PlayerState.prototype, "grounded");
-type("string")(PlayerState.prototype, "holding");
-type("string")(PlayerState.prototype, "heldBy");
-type("string")(PlayerState.prototype, "riding");
-type("string")(PlayerState.prototype, "direction");
-type("number")(PlayerState.prototype, "animationFrame");
-type("number")(PlayerState.prototype, "animationTimer");
-type("string")(PlayerState.prototype, "player_id");
+type("string")(Player.prototype, "id");
+type("number")(Player.prototype, "x");
+type("number")(Player.prototype, "y");
+type("number")(Player.prototype, "vx");
+type("number")(Player.prototype, "vy");
+type("boolean")(Player.prototype, "grounded");
+type("string")(Player.prototype, "holding");
+type("string")(Player.prototype, "heldBy");
+type("string")(Player.prototype, "riding");
+type("string")(Player.prototype, "direction");
+type("number")(Player.prototype, "animationFrame");
+type("number")(Player.prototype, "animationTimer");
+type("number")(Player.prototype, "width");
+type("number")(Player.prototype, "height");
+type("string")(Player.prototype, "type");
+type("string")(Player.prototype, "player_id");
 
-/**
- * --- Object Schema ---
- * Mirrors client gameRef.current.objects
- */
-class ObjectState extends Schema {
+// --- Object schema ---
+class GameObject extends Schema {
   constructor() {
     super();
     this.id = "";
-    this.type = ""; // box | button | door | sven | satellite | platform
     this.x = 0;
     this.y = 0;
     this.vx = 0;
     this.vy = 0;
+    this.type = "box";
     this.width = 32;
     this.height = 32;
-    this.collision_type = "solid"; // solid | trigger
+    this.collision_type = "solid";
     this.is_active = false;
     this.is_open = false;
     this.is_falling = false;
-    this.direction = "";
+    this.direction = "none";
     this.speed = 0;
-    this.path_start_x = 0;
-    this.path_end_x = 0;
-    this.path_start_y = 0;
-    this.path_end_y = 0;
-    this.button_id = "";
-    this.door_id = "";
   }
 }
-type("string")(ObjectState.prototype, "id");
-type("string")(ObjectState.prototype, "type");
-type("number")(ObjectState.prototype, "x");
-type("number")(ObjectState.prototype, "y");
-type("number")(ObjectState.prototype, "vx");
-type("number")(ObjectState.prototype, "vy");
-type("number")(ObjectState.prototype, "width");
-type("number")(ObjectState.prototype, "height");
-type("string")(ObjectState.prototype, "collision_type");
-type("boolean")(ObjectState.prototype, "is_active");
-type("boolean")(ObjectState.prototype, "is_open");
-type("boolean")(ObjectState.prototype, "is_falling");
-type("string")(ObjectState.prototype, "direction");
-type("number")(ObjectState.prototype, "speed");
-type("number")(ObjectState.prototype, "path_start_x");
-type("number")(ObjectState.prototype, "path_end_x");
-type("number")(ObjectState.prototype, "path_start_y");
-type("number")(ObjectState.prototype, "path_end_y");
-type("string")(ObjectState.prototype, "button_id");
-type("string")(ObjectState.prototype, "door_id");
+type("string")(GameObject.prototype, "id");
+type("number")(GameObject.prototype, "x");
+type("number")(GameObject.prototype, "y");
+type("number")(GameObject.prototype, "vx");
+type("number")(GameObject.prototype, "vy");
+type("string")(GameObject.prototype, "type");
+type("number")(GameObject.prototype, "width");
+type("number")(GameObject.prototype, "height");
+type("string")(GameObject.prototype, "collision_type");
+type("boolean")(GameObject.prototype, "is_active");
+type("boolean")(GameObject.prototype, "is_open");
+type("boolean")(GameObject.prototype, "is_falling");
+type("string")(GameObject.prototype, "direction");
+type("number")(GameObject.prototype, "speed");
 
-/**
- * --- Full Room State ---
- */
-class GameState extends Schema {
+// --- State schema ---
+class State extends Schema {
   constructor() {
     super();
     this.players = new MapSchema();
     this.objects = new MapSchema();
   }
 }
-type({ map: PlayerState })(GameState.prototype, "players");
-type({ map: ObjectState })(GameState.prototype, "objects");
+type({ map: Player })(State.prototype, "players");
+type({ map: GameObject })(State.prototype, "objects");
 
-/**
- * --- Game Room Logic ---
- */
+// --- GameRoom ---
 class GameRoom extends colyseus.Room {
   onCreate(options) {
-    console.log("✅ GameRoom created:", options);
-    this.setState(new GameState());
-
+    this.setState(new State());
     this.maxClients = 2;
 
-    this.onMessage("input", (client, input) => {
-      const player = this.state.players.get(client.sessionId);
+    this.onMessage("input", (client, data) => {
+      const player = this.state.players[client.sessionId];
       if (!player) return;
 
-      // Example: simple velocity assignment
-      player.vx = input.left ? -200 : input.right ? 200 : 0;
-      if (input.up && player.grounded) {
-        player.vy = -400; // jump
-        player.grounded = false;
-      }
-    });
+      const speed = 5;
+      if (data.left) { player.vx = -speed; player.direction = "left"; }
+      else if (data.right) { player.vx = speed; player.direction = "right"; }
+      else { player.vx = 0; }
 
-    this.setMetadata({
-      name: options.name || "Unnamed Room",
-      hasPassword: !!options.password,
-      clients: 0,
-      maxClients: this.maxClients,
-    });
+      if (data.up) { player.vy = -speed; } 
+      else { player.vy = 0; }
 
-    this.setSimulationInterval((dt) => this.update(dt));
+      player.x += player.vx;
+      player.y += player.vy;
+    });
   }
 
   onJoin(client, options) {
-    console.log(`👤 Player ${client.sessionId} joined.`);
-    const player = new PlayerState();
+    const player = new Player();
     player.id = client.sessionId;
     player.x = 100;
     player.y = 100;
-    player.width = 32;
-    player.height = 32;
-    this.state.players.set(client.sessionId, player);
-
-    this.setMetadata({
-      ...this.metadata,
-      clients: this.clients.length,
-    });
+    this.state.players[client.sessionId] = player;
+    console.log(`Player joined: ${client.sessionId}`);
   }
 
-  onLeave(client, consented) {
-    console.log(`👋 Player ${client.sessionId} left.`);
-    this.state.players.delete(client.sessionId);
-
-    this.setMetadata({
-      ...this.metadata,
-      clients: this.clients.length,
-    });
-  }
-
-  update(dt) {
-    const delta = dt / 1000;
-
-    // Physics step for players
-    this.state.players.forEach((player) => {
-      player.x += player.vx * delta;
-      player.y += player.vy * delta;
-      player.vy += 800 * delta; // gravity
-      if (player.y > 400) {
-        player.y = 400;
-        player.vy = 0;
-        player.grounded = true;
-      }
-    });
-
-    // Physics for objects can go here
+  onLeave(client) {
+    delete this.state.players[client.sessionId];
+    console.log(`Player left: ${client.sessionId}`);
   }
 }
 
