@@ -29,52 +29,53 @@ type({ map: Player })(State.prototype, "players");
 // Game room
 class GameRoom extends colyseus.Room {
   onCreate(options) {
-    // Setup initial state
     this.setState(new State());
-
-    // ✅ Set metadata so lobby can show room details
-    this.setMetadata({
-      name: options.name || "Unnamed Room",
-      hasPassword: !!options.password,
-      clients: 0,
-      maxClients: 2,
-    });
-
-    // ✅ Limit to 2 players
     this.maxClients = 2;
 
-    this.onMessage("updateState", (client, data) => {
+    // ✅ Simulation loop at 20 ticks/sec
+    this.setSimulationInterval(() => this.update());
+
+    this.onMessage("input", (client, data) => {
       const player = this.state.players[client.sessionId];
       if (player) {
-        player.x = data.x;
-        player.y = data.y;
         player.action = data.action;
       }
-      this.broadcast(
-        "playerUpdate",
-        { id: client.sessionId, ...data },
-        { except: client }
-      );
+    });
+
+    // Metadata for lobby
+    this.setMetadata({
+      name: options.name || "Game Room",
+      hasPassword: !!options.password,
+      clients: 0,
+      maxClients: this.maxClients,
     });
   }
 
+  update() {
+    // Apply actions each tick
+    for (const id in this.state.players) {
+      const p = this.state.players[id];
+      if (p.action === "left") p.x -= 2;
+      if (p.action === "right") p.x += 2;
+      if (p.action === "up") p.y -= 2;
+      if (p.action === "down") p.y += 2;
+    }
+  }
+
   onJoin(client, options) {
-    const player = new Player();
-    this.state.players[client.sessionId] = player;
+    this.state.players[client.sessionId] = new Player();
     console.log(`Player ${client.sessionId} joined.`);
 
-    // ✅ Update metadata with current player count
     this.setMetadata({
       ...this.metadata,
       clients: this.clients.length,
     });
   }
 
-  onLeave(client, consented) {
+  onLeave(client) {
     delete this.state.players[client.sessionId];
     console.log(`Player ${client.sessionId} left.`);
 
-    // ✅ Update metadata when player leaves
     this.setMetadata({
       ...this.metadata,
       clients: this.clients.length,
